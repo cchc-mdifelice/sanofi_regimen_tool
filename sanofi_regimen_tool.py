@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import random
 
+## currently runs but need to correct Linenumber and Year filters but does appear to generate the correct content
 
 data = pd.read_excel(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Sankey Data Filterd.xlsx")
 
@@ -40,8 +41,12 @@ for _, row in data.iterrows():
 # Convert the list back to a DataFrame
 modified_data_df = pd.DataFrame(modified_data)
 
+
+modified_data_df.to_clipboard()
+
 data = modified_data_df.copy()
 
+data['START_YEAR'] = data['START_YEAR'].astype(str)
 
 
 # Initialize the app
@@ -162,7 +167,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     filtered_data["Target"] = filtered_data["Target"].str.replace(f"4", "   ")
 
     # print("Year:",year, "Line:",line, "Transplant:",transplant, "LEN EXPOSURE:",len_exposed, "LEN REFACT:",len_refractory, "CD38:",cd38,"CD exposure", cd38_exposed)
-    # print(filtered_data)
+    filtered_data.to_clipboard()
     # Step 2: Nodes Creation
       # Step 2: Nodes Creation
     nodes = list(set(filtered_data['Source'].unique().tolist() + filtered_data['Target'].unique().tolist()))
@@ -170,41 +175,6 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     # Step 3: Links Creation
     filtered_data['count'] = 1
     links = filtered_data.groupby(['Source', 'Target']).size().reset_index(name='count')
-
-    # Determine link colors based on CD38 status of Source and Target
-    # link_colors = []
-    # color1 = "red"     # CD38 to NonCD38
-    # color2 = "blue"    # NonCD38 to CD38
-    # color3 = "green"   # CD38 to CD38
-    # color4 = "yellow"  # NonCD38 to NonCD38
-    
-    # for _, link in links.iterrows():
-    #     # print(f"Processing link from {link['Source']} to {link['Target']}")
-    #     source_data = filtered_data[filtered_data['Source'] == link['Source']]['CD38_FLAG']
-    #     target_data = filtered_data[filtered_data['Target'] == link['Target']]['CD38_FLAG']
-
-
-    #     source_cd38 = source_data.iloc[0] if not source_data.empty else None
-    #     target_cd38 = target_data.iloc[0] if not target_data.empty else None
-
-        
-    #     if source_cd38 and not target_cd38:
-    #         link_colors.append(color1)
-    #         print(f"Link from {link['Source']} to {link['Target']} gets color1")
-    #     elif not source_cd38 and target_cd38:
-    #         link_colors.append(color2)
-    #         print(f"Link from {link['Source']} to {link['Target']} gets color2")
-    #     elif source_cd38 and target_cd38:
-    #         link_colors.append(color3)
-    #         print(f"Link from {link['Source']} to {link['Target']} gets color3")
-    #     else:
-    #         link_colors.append(color4)
-    #         print(f"Link from {link['Source']} to {link['Target']} gets color4")
-
-
-    
-    # print(f"Source: {link['Source']} ({source_cd38}), Target: {link['Target']} ({target_cd38})")
-    # print(f"Source: {link['Source']} (CD38_FLAG: {source_cd38}), Target: {link['Target']} (CD38_FLAG: {target_cd38})")
 
 
     # Step 4: Visual Customizations
@@ -223,7 +193,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     source = [nodes.index(link) for link in links['Source']]
     target = [nodes.index(link) for link in links['Target']]
     value = links['count'].tolist()
-   
+    
     fig = go.Figure(
         data=[
             go.Sankey(
@@ -232,7 +202,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
                     thickness=60,
                     line=dict(width=0),
                     label=nodes,
-                    hovertemplate="LT:%{label}<extra></extra>",
+                    hovertemplate="LT:%{label}<extra>%{value}</extra>",
                     color=colors_node,
                 ),
                 link=dict(
