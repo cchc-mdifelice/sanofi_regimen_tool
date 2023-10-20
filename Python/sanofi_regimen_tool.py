@@ -7,9 +7,8 @@ import random
 
 ## currently runs but need to correct Linenumber and Year filters but does appear to generate the correct content
 
-data = pd.read_excel(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Sankey Data Filterd.xlsx")
-
-# change column C to Target and column D to Source
+# data = pd.read_excel(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Sankey Data Filterd.xlsx")
+data = pd.read_csv(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Data\Modified Data\modified_sankey.csv")
 
 ################################################################################################################################################
 

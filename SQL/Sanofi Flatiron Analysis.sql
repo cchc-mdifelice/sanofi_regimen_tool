@@ -1383,171 +1383,34 @@ AND (d.drugname LIKE '%daratumumab%' OR d.drugname LIKE '%isatuximab%')
 GROUP BY c.TreatmentYear
 ORDER BY c.TreatmentYear ASC;
 
-
-select count(distinct patientid) from PROD_CCHC.SANOFI.MM_FLRN_DRUGEPISODE_0901
-where  episodedate >= '2022-07-31';
-
-
-
-create or replace temporary table end_month as
-select *, year(lineenddate)*100+month(lineenddate) as end_month, year(linestartdate)*100+month(linestartdate) as start_month
-from prod_cchc.sanofi.mm_flrn_drugepisode_0901;
-
-select * from end_month limit 10;
-
-select end_month,count(distinct patientid) from end_month
-group by end_month
-order by end_month asc;
-
-select start_month,count(distinct patientid) 
-from end_month
-where end_month = 202307
-group by start_month
-order by start_month desc;
-
-select * from end_month
-where end_month = 202307
-order by linestartdate asc;
-
-select lineenddate,count(distinct patientid) from end_month
-where end_month = 202307
-group by lineenddate
-order by lineenddate desc;
-
+-- Create Sankey Data
 create or replace temporary table sankey_table as
 select patientid,linenumber,regimen,year(startdate) as start_year,len_flag,cd38_flag,cd38_exposed_flag,transplant_flag,len_refractory_flag
 from big_lot_table_8
 where line_zero_flag = 0
 and isfirsttreatment = 1;
 
-select * from sankey_table
-where patientid like 'F002651CEF65E';
-
-select patientid from big_lot_table_8
-where line_zero_flag = 0
-and isfirsttreatment = 1
-and linenumber = 1
-and cd38_flag = 1
-and transplant_flag = 0
-and year(startdate) = 2022;
-
-select count(distinct patientid)
-from big_lot_table_8
-where line_zero_flag = 0
-and isfirsttreatment = 1
-and linenumber = 2
-and cd38_flag = 1
-and patientid in (select patientid from big_lot_table_8
-where line_zero_flag = 0
-and isfirsttreatment = 1
-and linenumber = 1
-and cd38_flag = 1
-and transplant_flag = 0
-and year(startdate) = 2022);
-
-select count(distinct patientid) from big_lot_table_8
-where linename like 'Bortezomib,Daratumumab/Hyaluronidase-Fihj,Dexamethasone,Pomalidomide';
-
-
-create or replace temporary table Line_2_SCT as
-select  *
-from big_lot_table_8
-where linenumber = 2
-and transplant_flag = 1
-and cd38_flag = 1
-and line_zero_flag = 0
-and isfirsttreatment = 1
-and year(startdate) = 2022;
-
-create or replace temporary table Line_1_SCT_patients as
-select *
-from big_lot_table_8
-where patientid in (select patientid from Line_2_SCT)
-and linenumber = 1
-and linename like 'Transplant';
-create or replace temporary table line_1_sct_no_maintennce as
-select *
-from big_lot_table_8
-where patientid in (select patientid from LINE_1_SCT_PATIENTS)
-and patientid not in (select patientid from line_1_sct_w_maintennce)
-and linenumber = 1;
-
-create or replace temporary table line_1_sct_w_maintennce as
-select *
-from big_lot_table_8
-where patientid in (select patientid from LINE_1_SCT_PATIENTS)
-and linenumber = 1
-and ismaintenancetherapy = 'True';
-
-
-
-select count(distinct patientid)
-from big_lot_table_8
-where linenumber = 1
-and linename like '%Daratumumab%'
--- and isfirsttreatment = 1
-and patientid in (select patientid from line_1_sct_w_maintennce);
-
-WITH PatientDurations AS (
-    SELECT  
-        patientid,
-        MIN(startdate) as startdate,
-        MAX(enddate) AS enddate,
-        -- Calculating the difference in months for each patient
-        DATEDIFF(MONTH, MIN(startdate), MAX(enddate)) AS month_difference
-    FROM big_lot_table_8
-    WHERE linenumber = 1
-    and linename like '%Daratumumab%'
-    AND patientid IN (SELECT patientid FROM line_1_sct_w_maintennce)
-    GROUP BY patientid  -- Grouping by patientid to get min and max dates per patient
-)
-
+-- CREATE OR REPLACE TEMPORARY TABLE rolling_sankey_table AS
+CREATE OR REPLACE TEMPORARY TABLE rolling_sankey_table AS
 SELECT 
-    AVG(month_difference) AS avg_duration_for_all_patients
-FROM PatientDurations;
+    patientid, 
+    linenumber, 
+    regimen, 
+    startdate, 
+    len_flag, 
+    cd38_flag, 
+    cd38_exposed_flag, 
+    transplant_flag, 
+    len_refractory_flag,
+    CASE 
+        WHEN startdate BETWEEN DATEADD('MONTH', -6, '2023-07-31') AND '2023-07-31' THEN '6 months'
+        WHEN startdate BETWEEN DATEADD('MONTH', -12, '2023-07-31') AND '2023-07-31' THEN '12 months'
+        WHEN startdate BETWEEN DATEADD('MONTH', -18, '2023-07-31') AND'2023-07-31' THEN '18 months'
+        WHEN startdate BETWEEN DATEADD('month',-24,'2023-07-31') and '2023-07-31' then '24 months'
+        ELSE '24+ months'
+    END AS time_frame_label
+FROM big_lot_table_8
+WHERE line_zero_flag = 0
+AND isfirsttreatment = 1;
 
-WITH PatientDurations AS (
-    SELECT 
-        patientid,
-        MIN(startdate) as startdate,
-        MAX(enddate) AS enddate,
-        -- Calculating the difference in months for each patient
-        DATEDIFF(MONTH, MIN(startdate), MAX(enddate)) AS month_difference
-    FROM big_lot_table_8
-    WHERE linenumber = 1
-    AND cd38_flag = 1
-    AND patientid IN (SELECT patientid FROM line_1_sct_no_maintennce)
-    GROUP BY patientid  -- Grouping by patientid to get min and max dates per patient
-)
-
-SELECT 
-    avg(month_difference) AS avg_duration_for_all_patients
-FROM PatientDurations;
-
-
-select count(distinct patientid)
-from big_lot_table_8
-where linenumber = 1
-and cd38_flag = 1
-and patientid in (select patientid from line_1_sct_no_maintennce);
-
-
-select  count(distinct patientid)
-from big_lot_table_8
-where linenumber = 3
-and transplant_flag = 0
-and cd38_flag = 1
--- and cd38_exposed_flag = 1
-and line_zero_flag = 0
-and isfirsttreatment = 1
-and year(startdate) = 2022;
-
-select count(distinct patientid)
-from big_lot_table_8
-where linenumber = 2
-and transplant_flag = 1
-and year(startdate) = 2022
-and cd38_flag = 1
-and cd38_exposed_flag = 0
-and line_zero_flag = 0
-and isfirsttreatment = 1;
+select * from rolling_sankey_table;
