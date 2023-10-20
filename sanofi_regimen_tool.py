@@ -15,36 +15,36 @@ colors = {}
 line_numbers = data['LINENUMBER'].unique()
 
 # Create a list to hold the modified data
-modified_data = []
+# modified_data = []
 
-# Iterate over each row in the data
-for _, row in data.iterrows():
-    # If PREVIOUS_REGIMEN is not '0', create an intermediate row
-    if row['PREVIOUS_REGIMEN'] != '0':
-        modified_data.append({
-            'PATIENTID': row['PATIENTID'],
-            'LINENUMBER': row['LINENUMBER'],
-            'Source': row['PREVIOUS_REGIMEN'],
-            'Target': row['Source'],
-            # Retain other columns as well
-            'LEN_FLAG': row['LEN_FLAG'],
-            'CD38_FLAG': row['CD38_FLAG'],
-            'CD38_EXPOSED_FLAG': row['CD38_EXPOSED_FLAG'],
-            'TRANSPLANT_FLAG': row['TRANSPLANT_FLAG'],
-            'START_YEAR': row['START_YEAR'],
-            'LEN_REFRACTORY_FLAG': row['LEN_REFRACTORY_FLAG']
-        })
+# # Iterate over each row in the data
+# for _, row in data.iterrows():
+#     # If PREVIOUS_REGIMEN is not '0', create an intermediate row
+#     if row['PREVIOUS_REGIMEN'] != '0':
+#         modified_data.append({
+#             'PATIENTID': row['PATIENTID'],
+#             'LINENUMBER': row['LINENUMBER'],
+#             'Source': row['PREVIOUS_REGIMEN'],
+#             'Target': row['Source'],
+#             # Retain other columns as well
+#             'LEN_FLAG': row['LEN_FLAG'],
+#             'CD38_FLAG': row['CD38_FLAG'],
+#             'CD38_EXPOSED_FLAG': row['CD38_EXPOSED_FLAG'],
+#             'TRANSPLANT_FLAG': row['TRANSPLANT_FLAG'],
+#             'START_YEAR': row['START_YEAR'],
+#             'LEN_REFRACTORY_FLAG': row['LEN_REFRACTORY_FLAG']
+#         })
     
-    # Add the original row with flow from Source to Target
-    modified_data.append(row.to_dict())
+#     # Add the original row with flow from Source to Target
+#     modified_data.append(row.to_dict())
 
-# Convert the list back to a DataFrame
-modified_data_df = pd.DataFrame(modified_data)
+# # Convert the list back to a DataFrame
+# modified_data_df = pd.DataFrame(modified_data)
 
 
-modified_data_df.to_clipboard()
+# modified_data_df.to_clipboard()
 
-data = modified_data_df.copy()
+# data = modified_data_df.copy()
 
 data['START_YEAR'] = data['START_YEAR'].astype(str)
 
