@@ -9,10 +9,17 @@ import random
 
 data = pd.read_excel(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Sankey Data Filterd.xlsx")
 
+# change column C to Target and column D to Source
+
+################################################################################################################################################
+
 # # Step 1: Create unique nodes for LINENUMBER, REGIMEN, and NEXT_REGIMEN
 colors = {}
 # # Getting unique values for each column
 line_numbers = data['LINENUMBER'].unique()
+
+################################################################################################################################################
+
 
 # Create a list to hold the modified data
 # modified_data = []
@@ -170,25 +177,65 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     filtered_data.to_clipboard()
     # Step 2: Nodes Creation
       # Step 2: Nodes Creation
+
+    # # Extract unique nodes from "Source" and their corresponding CD38_FLAG values
+    # source_nodes = filtered_data[['Source', 'CD38_FLAG']].drop_duplicates()
+
+    # # Extract unique nodes from "Target" and their corresponding CD38_FLAG values
+    # target_nodes = filtered_data[['Target', 'CD38_FLAG']].drop_duplicates()
+
+    # # Combine the two and drop duplicates
+    # all_nodes = pd.concat([source_nodes, target_nodes.rename(columns={'Target': 'Source'})], ignore_index=True).drop_duplicates()
+
+    # # Create a dictionary mapping node labels to colors based on CD38_FLAG
+    # node_colors_mapping = {
+    #     node: 'red' if ('D' in node or 'Isa' in node) else ('grey' if 'Clinical Study Drug' in node else 'blue') for node in all_nodes['Source']
+    # }
+
+    
     nodes = list(set(filtered_data['Source'].unique().tolist() + filtered_data['Target'].unique().tolist()))
     
     # Step 3: Links Creation
     filtered_data['count'] = 1
     links = filtered_data.groupby(['Source', 'Target']).size().reset_index(name='count')
 
+    # colors_node = [node_colors_mapping[node] for node in nodes]
+    #     # Define colors for each link combination
+    # link_colors = {
+    #     ('red', 'blue'): 'rgba(0, 128, 0, 0.8)',   # Green with 0.8 opacity
+    #     ('red', 'red'): 'rgba(255, 0, 0, 0.8)',    # Red with 0.8 opacity
+    #     ('blue', 'blue'): 'rgba(0, 0, 255, 0.8)',  # Blue with 0.8 opacity
+    #     ('blue', 'red'): 'rgba(128, 0, 128, 0.8)'  # Purple with 0.8 opacity
+    # }
+
+
+    # # Create link color assignments based on source and target node colors
+    # link_colors_assignment = [
+    #     link_colors[(node_colors_mapping[source], node_colors_mapping[target])] 
+    #     for source, target in zip(links['Source'], links['Target'])
+    # ]
+
 
     # Step 4: Visual Customizations
     colors_node = ['rgba({}, {}, {}, 1)'.format(random.randint(0, 255), 
                                                 random.randint(0, 255), 
                                                 random.randint(0, 255)) for _ in nodes]
-    
-    # If we want the random colors 
-    link_colors = ['rgba({}, {}, {}, 0.5)'.format(random.randint(0, 255), 
-                                                  random.randint(0, 255), 
-                                                  random.randint(0, 255)) for _ in range(len(links))]
-    
 
-    # Add these annotations to your Sankey diagram layout
+    # If we want the random colors 
+    # link_colors = ['rgba({}, {}, {}, 0.5)'.format(random.randint(0, 255), 
+    #                                               random.randint(0, 255), 
+    #                                               random.randint(0, 255)) for _ in range(len(links))]
+    
+    link_colors = [colors_node[nodes.index(source)] for source in links['Source']]
+
+    def adjust_opacity(color, opacity=0.85):
+        # Split the color string and replace the opacity value
+        parts = color.split(",")
+        parts[3] = " " + str(opacity) + ")"
+        return ",".join(parts)
+
+    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links['Source']]
+
    
     source = [nodes.index(link) for link in links['Source']]
     target = [nodes.index(link) for link in links['Target']]
