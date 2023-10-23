@@ -1390,27 +1390,9 @@ from big_lot_table_8
 where line_zero_flag = 0
 and isfirsttreatment = 1;
 
--- CREATE OR REPLACE TEMPORARY TABLE rolling_sankey_table AS
-CREATE OR REPLACE TEMPORARY TABLE rolling_sankey_table AS
-SELECT 
-    patientid, 
-    linenumber, 
-    regimen, 
-    startdate, 
-    len_flag, 
-    cd38_flag, 
-    cd38_exposed_flag, 
-    transplant_flag, 
-    len_refractory_flag,
-    CASE 
-        WHEN startdate BETWEEN DATEADD('MONTH', -6, '2023-07-31') AND '2023-07-31' THEN '6 months'
-        WHEN startdate BETWEEN DATEADD('MONTH', -12, '2023-07-31') AND '2023-07-31' THEN '12 months'
-        WHEN startdate BETWEEN DATEADD('MONTH', -18, '2023-07-31') AND'2023-07-31' THEN '18 months'
-        WHEN startdate BETWEEN DATEADD('month',-24,'2023-07-31') and '2023-07-31' then '24 months'
-        ELSE '24+ months'
-    END AS time_frame_label
-FROM big_lot_table_8
-WHERE line_zero_flag = 0
-AND isfirsttreatment = 1;
-
-select * from rolling_sankey_table;
+select count(distinct patientid)
+from big_lot_table_8
+where line_zero_flag = 0
+and isfirsttreatment = 1
+and linenumber = 2
+and startdate between '2022-07-01' and '2023-07-31';

@@ -62,6 +62,7 @@ app = dash.Dash(__name__)
 # Layout of the app
 app.layout = html.Div([
 html.H1("Patient Regimen Flow"),
+html.Div(id='patient-total', style={'fontSize': 24, 'marginBottom': 20}),
 
 html.Label('Select Year:'),
 dcc.Dropdown(
@@ -130,6 +131,7 @@ dcc.Dropdown(
 # Callback to update the Sankey diagram based on filters
 @app.callback(
     Output('sankey-graph', 'figure'),
+    Output('patient-total', 'children'),
     [Input('submit-button', 'n_clicks')],
     [dash.dependencies.State('year-dropdown', 'value'),
     dash.dependencies.State('line-dropdown', 'value'),
@@ -146,7 +148,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     filtered_data = data
 
     if not n_clicks:
-        return go.Figure()
+        return go.Figure(), "Total Patients: 0"
     if year:
         filtered_data = filtered_data[filtered_data['START_YEAR'] == year]
     if line:
@@ -173,7 +175,11 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     filtered_data["Target"] = filtered_data["Target"].str.replace(f"4", "   ")
 
     # print("Year:",year, "Line:",line, "Transplant:",transplant, "LEN EXPOSURE:",len_exposed, "LEN REFACT:",len_refractory, "CD38:",cd38,"CD exposure", cd38_exposed)
-    filtered_data.to_clipboard()
+    
+
+    total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
+    patient_text = f"Total Patients: {total_patients}"
+
     # Step 2: Nodes Creation
       # Step 2: Nodes Creation
 
@@ -264,7 +270,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
         layout={"height": 1000},
                 )
 
-    return fig
+    return fig,patient_text
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
