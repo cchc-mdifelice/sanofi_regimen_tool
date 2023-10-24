@@ -165,14 +165,14 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
         filtered_data = filtered_data[filtered_data['CD38_EXPOSED_FLAG'] == cd38_exposed]
     
 
-    filtered_data["Source"] = filtered_data["Source"].str.replace(f"1", "")
-    filtered_data["Source"] = filtered_data["Source"].str.replace(f"2", " ")
-    filtered_data["Source"] = filtered_data["Source"].str.replace(f"3", "  ")
-    filtered_data["Source"] = filtered_data["Source"].str.replace(f"4", "   ")
-    filtered_data["Target"] = filtered_data["Target"].str.replace(f"1", "")
-    filtered_data["Target"] = filtered_data["Target"].str.replace(f"2", " ")
-    filtered_data["Target"] = filtered_data["Target"].str.replace(f"3", "  ")
-    filtered_data["Target"] = filtered_data["Target"].str.replace(f"4", "   ")
+    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"1", "")
+    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"2", " ")
+    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"3", "  ")
+    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"4", "   ")
+    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"1", "")
+    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"2", " ")
+    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"3", "  ")
+    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"4", "   ")
 
     # print("Year:",year, "Line:",line, "Transplant:",transplant, "LEN EXPOSURE:",len_exposed, "LEN REFACT:",len_refractory, "CD38:",cd38,"CD exposure", cd38_exposed)
     
@@ -198,11 +198,11 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     # }
 
     
-    nodes = list(set(filtered_data['Source'].unique().tolist() + filtered_data['Target'].unique().tolist()))
+    nodes = list(set(filtered_data['PREVIOUS_REGIMEN'].unique().tolist() + filtered_data['REGIMEN'].unique().tolist()))
     
     # Step 3: Links Creation
     filtered_data['count'] = 1
-    links = filtered_data.groupby(['Source', 'Target']).size().reset_index(name='count')
+    links = filtered_data.groupby(['PREVIOUS_REGIMEN', 'REGIMEN']).size().reset_index(name='count')
 
     # colors_node = [node_colors_mapping[node] for node in nodes]
     #     # Define colors for each link combination
@@ -231,7 +231,7 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
     #                                               random.randint(0, 255), 
     #                                               random.randint(0, 255)) for _ in range(len(links))]
     
-    link_colors = [colors_node[nodes.index(source)] for source in links['Source']]
+    link_colors = [colors_node[nodes.index(source)] for source in links['PREVIOUS_REGIMEN']]
 
     def adjust_opacity(color, opacity=0.85):
         # Split the color string and replace the opacity value
@@ -239,11 +239,11 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
         parts[3] = " " + str(opacity) + ")"
         return ",".join(parts)
 
-    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links['Source']]
+    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links['PREVIOUS_REGIMEN']]
 
    
-    source = [nodes.index(link) for link in links['Source']]
-    target = [nodes.index(link) for link in links['Target']]
+    source = [nodes.index(link) for link in links['PREVIOUS_REGIMEN']]
+    target = [nodes.index(link) for link in links['REGIMEN']]
     value = links['count'].tolist()
     
     fig = go.Figure(
