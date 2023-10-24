@@ -1,4 +1,4 @@
 # Ignore CSV files
 *.xlsx
-
+*.csv
 Induction to Maintenance.py
