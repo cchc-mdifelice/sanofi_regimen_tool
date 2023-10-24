@@ -17,41 +17,6 @@ colors = {}
 # # Getting unique values for each column
 line_numbers = data['LINENUMBER'].unique()
 
-################################################################################################################################################
-
-
-# Create a list to hold the modified data
-# modified_data = []
-
-# # Iterate over each row in the data
-# for _, row in data.iterrows():
-#     # If PREVIOUS_REGIMEN is not '0', create an intermediate row
-#     if row['PREVIOUS_REGIMEN'] != '0':
-#         modified_data.append({
-#             'PATIENTID': row['PATIENTID'],
-#             'LINENUMBER': row['LINENUMBER'],
-#             'Source': row['PREVIOUS_REGIMEN'],
-#             'Target': row['Source'],
-#             # Retain other columns as well
-#             'LEN_FLAG': row['LEN_FLAG'],
-#             'CD38_FLAG': row['CD38_FLAG'],
-#             'CD38_EXPOSED_FLAG': row['CD38_EXPOSED_FLAG'],
-#             'TRANSPLANT_FLAG': row['TRANSPLANT_FLAG'],
-#             'START_YEAR': row['START_YEAR'],
-#             'LEN_REFRACTORY_FLAG': row['LEN_REFRACTORY_FLAG']
-#         })
-    
-#     # Add the original row with flow from Source to Target
-#     modified_data.append(row.to_dict())
-
-# # Convert the list back to a DataFrame
-# modified_data_df = pd.DataFrame(modified_data)
-
-
-# modified_data_df.to_clipboard()
-
-# data = modified_data_df.copy()
-
 data['START_YEAR'] = data['START_YEAR'].astype(str)
 
 
@@ -63,8 +28,18 @@ app = dash.Dash(__name__)
 app.layout = html.Div([
 html.H1("Patient Regimen Flow"),
 html.Div(id='patient-total', style={'fontSize': 24, 'marginBottom': 20}),
-
-html.Label('Select Year:'),
+html.Label('Regimen Type:'),
+dcc.RadioItems(
+    id='regimen-toggle',
+    options=[
+        {'label': 'Regular Regimen', 'value': 'REGIMEN'},
+        {'label': 'Bundled Regimen', 'value': 'BUNDLED_REGIMEN'}
+    ],
+    value='REGIMEN',  # Default to REGIMEN
+    labelStyle={'display': 'block'},  # Display options as block for better readability
+    style={'marginBottom': 20}  # Add some margin at the bottom
+),
+html.Label('Select Lookback Period:'),
 dcc.Dropdown(
     id='year-dropdown',
     options=[{'label': year, 'value': year} for year in sorted(data['START_YEAR'].unique(), reverse=True)],
@@ -119,8 +94,6 @@ dcc.Dropdown(
     value=None
 ),
     
-
-    
     html.Button('Submit', id='submit-button', n_clicks=0),
     dcc.Loading([
         dcc.Graph(id='sankey-graph')
@@ -133,7 +106,8 @@ dcc.Dropdown(
     Output('sankey-graph', 'figure'),
     Output('patient-total', 'children'),
     [Input('submit-button', 'n_clicks')],
-    [dash.dependencies.State('year-dropdown', 'value'),
+    [dash.dependencies.State('regimen-toggle', 'value'),
+    dash.dependencies.State('year-dropdown', 'value'),
     dash.dependencies.State('line-dropdown', 'value'),
     dash.dependencies.State('transplant-dropdown', 'value'),
     dash.dependencies.State('len-dropdown', 'value'),
@@ -143,9 +117,17 @@ dcc.Dropdown(
     ],
 )
 
-def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, cd38, cd38_exposed):
+def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len_refractory, cd38, cd38_exposed):
     # Step 1: Data Filtering
     filtered_data = data
+
+        # Determine which columns to use based on the toggle value
+    if toggle_value == 'REGIMEN':
+        source_column = 'PREVIOUS_REGIMEN'
+        target_column = 'REGIMEN'
+    else:  # toggle_value is 'BUNDLED_REGIMEN'
+        source_column = 'PREVIOUS_BUNDLE'
+        target_column = 'BUNDLED_REGIMEN'
 
     if not n_clicks:
         return go.Figure(), "Total Patients: 0"
@@ -165,73 +147,32 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
         filtered_data = filtered_data[filtered_data['CD38_EXPOSED_FLAG'] == cd38_exposed]
     
 
-    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"1", "")
-    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"2", " ")
-    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"3", "  ")
-    filtered_data["PREVIOUS_REGIMEN"] = filtered_data["PREVIOUS_REGIMEN"].str.replace(f"4", "   ")
-    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"1", "")
-    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"2", " ")
-    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"3", "  ")
-    filtered_data["REGIMEN"] = filtered_data["REGIMEN"].str.replace(f"4", "   ")
-
-    # print("Year:",year, "Line:",line, "Transplant:",transplant, "LEN EXPOSURE:",len_exposed, "LEN REFACT:",len_refractory, "CD38:",cd38,"CD exposure", cd38_exposed)
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"1", "")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"2", " ")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"3", "  ")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"4", "   ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"1", "")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"2", " ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"3", "  ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"4", "   ")
     
 
     total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
     patient_text = f"Total Patients: {total_patients}"
 
-    # Step 2: Nodes Creation
-      # Step 2: Nodes Creation
-
-    # # Extract unique nodes from "Source" and their corresponding CD38_FLAG values
-    # source_nodes = filtered_data[['Source', 'CD38_FLAG']].drop_duplicates()
-
-    # # Extract unique nodes from "Target" and their corresponding CD38_FLAG values
-    # target_nodes = filtered_data[['Target', 'CD38_FLAG']].drop_duplicates()
-
-    # # Combine the two and drop duplicates
-    # all_nodes = pd.concat([source_nodes, target_nodes.rename(columns={'Target': 'Source'})], ignore_index=True).drop_duplicates()
-
-    # # Create a dictionary mapping node labels to colors based on CD38_FLAG
-    # node_colors_mapping = {
-    #     node: 'red' if ('D' in node or 'Isa' in node) else ('grey' if 'Clinical Study Drug' in node else 'blue') for node in all_nodes['Source']
-    # }
-
     
-    nodes = list(set(filtered_data['PREVIOUS_REGIMEN'].unique().tolist() + filtered_data['REGIMEN'].unique().tolist()))
-    
+    nodes = list(filtered_data[source_column].unique().tolist()) + list(filtered_data[target_column].unique().tolist())
+
     # Step 3: Links Creation
     filtered_data['count'] = 1
-    links = filtered_data.groupby(['PREVIOUS_REGIMEN', 'REGIMEN']).size().reset_index(name='count')
-
-    # colors_node = [node_colors_mapping[node] for node in nodes]
-    #     # Define colors for each link combination
-    # link_colors = {
-    #     ('red', 'blue'): 'rgba(0, 128, 0, 0.8)',   # Green with 0.8 opacity
-    #     ('red', 'red'): 'rgba(255, 0, 0, 0.8)',    # Red with 0.8 opacity
-    #     ('blue', 'blue'): 'rgba(0, 0, 255, 0.8)',  # Blue with 0.8 opacity
-    #     ('blue', 'red'): 'rgba(128, 0, 128, 0.8)'  # Purple with 0.8 opacity
-    # }
-
-
-    # # Create link color assignments based on source and target node colors
-    # link_colors_assignment = [
-    #     link_colors[(node_colors_mapping[source], node_colors_mapping[target])] 
-    #     for source, target in zip(links['Source'], links['Target'])
-    # ]
-
+    links = filtered_data.groupby([source_column, target_column]).size().reset_index(name='count')
 
     # Step 4: Visual Customizations
     colors_node = ['rgba({}, {}, {}, 1)'.format(random.randint(0, 255), 
                                                 random.randint(0, 255), 
                                                 random.randint(0, 255)) for _ in nodes]
 
-    # If we want the random colors 
-    # link_colors = ['rgba({}, {}, {}, 0.5)'.format(random.randint(0, 255), 
-    #                                               random.randint(0, 255), 
-    #                                               random.randint(0, 255)) for _ in range(len(links))]
-    
-    link_colors = [colors_node[nodes.index(source)] for source in links['PREVIOUS_REGIMEN']]
+    link_colors = [colors_node[nodes.index(source)] for source in links[source_column]]
 
     def adjust_opacity(color, opacity=0.85):
         # Split the color string and replace the opacity value
@@ -239,11 +180,11 @@ def update_output(n_clicks,year, line, transplant, len_exposed, len_refractory, 
         parts[3] = " " + str(opacity) + ")"
         return ",".join(parts)
 
-    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links['PREVIOUS_REGIMEN']]
+    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links[target_column]]
 
    
-    source = [nodes.index(link) for link in links['PREVIOUS_REGIMEN']]
-    target = [nodes.index(link) for link in links['REGIMEN']]
+    source = [nodes.index(link) for link in links[source_column]]
+    target = [nodes.index(link) for link in links[target_column]]
     value = links['count'].tolist()
     
     fig = go.Figure(
