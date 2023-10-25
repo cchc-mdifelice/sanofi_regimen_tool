@@ -1397,3 +1397,35 @@ and isfirsttreatment = 1
 and linenumber = 2
 and startdate between '2022-07-01' and '2023-07-31';
 
+
+create or replace temporary table two_plus_SCT_patients as
+select patientid 
+from big_lot_table_8
+where line_zero_flag = 0
+and linename like '%Transplant%'
+and linenumber >= 2;
+
+create or replace temporary table two_plus_SCT_examples as
+select patientid,linenumber,linename,combinedline
+from big_lot_table_8
+where line_zero_flag = 0
+and patientid in (select patientid from two_plus_SCT_patients)
+group by patientid,linenumber,linename,combinedline
+order by patientid,linenumber asc;
+
+select count(distinct patientid)
+from two_plus_sct_examples;
+-- where linename like '%Clinical Study Drug%';
+
+create or replace temporary table maintenance_patients as 
+select patientid
+from big_lot_table_8
+where line_zero_flag = 0
+and ismaintenancetherapy like 'True';
+
+select * from big_lot_table_8
+where patientid in (select patientid from maintenance_patients)
+and transplant_flag = 1;
+
+select * from big_lot_table_8
+where patientid like 'F001E7DD3C229'
