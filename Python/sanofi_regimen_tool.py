@@ -180,7 +180,7 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
         parts[3] = " " + str(opacity) + ")"
         return ",".join(parts)
 
-    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links[target_column]]
+    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links[source_column]]
 
    
     source = [nodes.index(link) for link in links[source_column]]

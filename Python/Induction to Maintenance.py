@@ -50,7 +50,7 @@ dcc.Dropdown(
 html.Label('Select Line Number:'),
     dcc.Dropdown(
         id='line-dropdown',
-        options=[{'label': "Line 1", 'value': '1'} , {'label': "Line 2", 'value': '2'}, {'label': "Line 3", 'value': '3'}, {'label': "Line 4", 'value': '4'}],
+        options=[{'label': "Line 1", 'value': 1} , {'label': "Line 2", 'value': 2}, {'label': "Line 3", 'value': 3}, {'label': "Line 4", 'value': 4}],
         multi=False,
         value=None
     ),
@@ -159,7 +159,7 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
     
 
     total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
-    patient_text = f"Total Patients: {total_patients}"
+    patient_text = f"Total Patients: {total_patients//2}"
 
     
     nodes = list(filtered_data[source_column].unique().tolist()) + list(filtered_data[target_column].unique().tolist())

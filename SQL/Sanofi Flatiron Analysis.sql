@@ -1390,14 +1390,6 @@ from big_lot_table_8
 where line_zero_flag = 0
 and isfirsttreatment = 1;
 
-select *
-from big_lot_table_8
-where line_zero_flag = 0
--- and isfirsttreatment = 1
-and linenumber = 1
-and linename like '%Transplant%'
-and startdate between '2022-07-31' and '2023-07-31';
-
 
 create or replace temporary table two_plus_SCT_patients as
 select patientid 
@@ -1425,6 +1417,14 @@ where line_zero_flag = 0
 and ismaintenancetherapy like 'True';
 
 select * from big_lot_table_8
-where patientid like 'F001E7DD3C229'
+where patientid like 'F66348EDDFC86'
 and transplant_flag = 1;
 
+select count(distinct patientid)
+from big_lot_table_8
+where line_zero_flag = 0
+and isfirsttreatment = 1
+and transplant_flag = 1
+and cd38_flag = 1
+and linenumber = 2
+and startdate >= '2022-07-31';
