@@ -1428,3 +1428,9 @@ and transplant_flag = 1
 and cd38_flag = 1
 and linenumber = 2
 and startdate >= '2022-07-31';
+
+select count(distinct patientid),year(EPISODEDATE)
+from PROD_CCHC.SANOFI.MM_FLRN_DRUGEPISODE_0901
+where linename like '%Daratumumab%'
+group by year(EPISODEDATE)
+order by year(EPISODEDATE) desc;
