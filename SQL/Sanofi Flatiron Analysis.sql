@@ -1434,3 +1434,15 @@ from PROD_CCHC.SANOFI.MM_FLRN_DRUGEPISODE_0901
 where linename like '%Daratumumab%'
 group by year(EPISODEDATE)
 order by year(EPISODEDATE) desc;
+
+select count(distinct patientid) ,year(diagnosisdate)
+from PROD_CCHC.SANOFI.MM_FLRN_MM_MULTIPLEMYELOMA_0901
+group by year(diagnosisdate)
+order by year(diagnosisdate) desc;
+
+select count(distinct patientid),linenumber
+from big_lot_table_8
+where line_zero_flag = 0
+and cd38_flag = 1
+and year(startdate) = 2022
+group by linenumber;
