@@ -147,14 +147,14 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
         filtered_data = filtered_data[filtered_data['CD38_EXPOSED_FLAG'] == cd38_exposed]
     
 
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"1", "")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"2", " ")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"3", "  ")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"4", "   ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"1", "")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"2", " ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"3", "  ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"4", "   ")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"1.", "")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"2.", " ")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"3.", "  ")
+    filtered_data[source_column] = filtered_data[source_column].str.replace(f"4.", "   ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"1.0", "")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"2.0", " ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"3.0", "  ")
+    filtered_data[target_column] = filtered_data[target_column].str.replace(f"4.0", "   ")
     
 
     total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
