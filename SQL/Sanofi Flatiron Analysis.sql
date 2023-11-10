@@ -1443,6 +1443,6 @@ order by year(diagnosisdate) desc;
 select count(distinct patientid),linenumber
 from big_lot_table_8
 where line_zero_flag = 0
-and cd38_flag = 1
+and isfirsttreatment = 1
 and year(startdate) = 2022
 group by linenumber;

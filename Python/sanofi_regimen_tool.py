@@ -160,6 +160,21 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
     total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
     patient_text = f"Total Patients: {total_patients}"
 
+    # Function to generate a random color
+    def generate_random_color():
+        return '#' + ''.join(random.choices('0123456789ABCDEF', k=6))
+
+    # Function to generate a color map
+    def generate_color_map(unique_items):
+        return {item: generate_random_color() for item in unique_items}
+
+    # Extract unique Regimens and Bundled Regimens
+    unique_regimens = pd.concat([data['REGIMEN'], filtered_data['BUNDLED_REGIMEN']]).unique()
+
+    # Generate the color map
+    regimen_color_map = generate_color_map(unique_regimens)
+    print(regimen_color_map)
+
     
     nodes = list(filtered_data[source_column].unique().tolist()) + list(filtered_data[target_column].unique().tolist())
 
