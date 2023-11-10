@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import random
 
+
 ## currently runs but need to correct Linenumber and Year filters but does appear to generate the correct content
 
 # data = pd.read_excel(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\Sankey Data Filterd.xlsx")
@@ -12,12 +13,46 @@ data = pd.read_csv(r"C:\Users\MichaelDiFelice\Documents\Sanofi\Python\Dashboard\
 
 ################################################################################################################################################
 
+# Remove the tails from the regimens
+data['PREVIOUS_REGIMEN'] = data['PREVIOUS_REGIMEN'].str.replace(f"1.", "")
+data['PREVIOUS_REGIMEN'] = data['PREVIOUS_REGIMEN'].str.replace(f"2.", " ")
+data['PREVIOUS_REGIMEN'] = data['PREVIOUS_REGIMEN'].str.replace(f"3.", "  ")
+data['PREVIOUS_REGIMEN'] = data['PREVIOUS_REGIMEN'].str.replace(f"4.", "   ")
+data['REGIMEN'] = data['REGIMEN'].str.replace(f"1.0", "")
+data['REGIMEN'] = data['REGIMEN'].str.replace(f"2.0", " ")
+data['REGIMEN'] = data['REGIMEN'].str.replace(f"3.0", "  ")
+data['REGIMEN'] = data['REGIMEN'].str.replace(f"4.0", "   ")
+
+data['PREVIOUS_BUNDLE'] = data['PREVIOUS_BUNDLE'].str.replace(f"1.", "")
+data['PREVIOUS_BUNDLE'] = data['PREVIOUS_BUNDLE'].str.replace(f"2.", " ")
+data['PREVIOUS_BUNDLE'] = data['PREVIOUS_BUNDLE'].str.replace(f"3.", "  ")
+data['PREVIOUS_BUNDLE'] = data['PREVIOUS_BUNDLE'].str.replace(f"4.", "   ")
+data['BUNDLED_REGIMEN'] = data['BUNDLED_REGIMEN'].str.replace(f"1.0", "")
+data['BUNDLED_REGIMEN'] = data['BUNDLED_REGIMEN'].str.replace(f"2.0", " ")
+data['BUNDLED_REGIMEN'] = data['BUNDLED_REGIMEN'].str.replace(f"3.0", "  ")
+data['BUNDLED_REGIMEN'] = data['BUNDLED_REGIMEN'].str.replace(f"4.0", "   ")
+
 # # Step 1: Create unique nodes for LINENUMBER, REGIMEN, and NEXT_REGIMEN
 colors = {}
 # # Getting unique values for each column
 line_numbers = data['LINENUMBER'].unique()
 
 data['START_YEAR'] = data['START_YEAR'].astype(str)
+
+# Function to generate a random color
+def generate_random_color():
+    return '#' + ''.join(random.choices('0123456789ABCDEF', k=6))
+
+# Function to generate a color map
+def generate_color_map(unique_items):
+    return {item: generate_random_color() for item in unique_items}
+
+
+# Extract unique Regimens and Bundled Regimens
+unique_regimens = pd.concat([data['REGIMEN'], data['BUNDLED_REGIMEN']]).unique()
+
+# Generate the color map
+regimen_color_map = generate_color_map(unique_regimens)
 
 
 # Initialize the app
@@ -147,56 +182,28 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
         filtered_data = filtered_data[filtered_data['CD38_EXPOSED_FLAG'] == cd38_exposed]
     
 
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"1.", "")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"2.", " ")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"3.", "  ")
-    filtered_data[source_column] = filtered_data[source_column].str.replace(f"4.", "   ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"1.0", "")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"2.0", " ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"3.0", "  ")
-    filtered_data[target_column] = filtered_data[target_column].str.replace(f"4.0", "   ")
-    
-
     total_patients = filtered_data.shape[0]  # Get the number of rows in filtered_data
     patient_text = f"Total Patients: {total_patients}"
 
-    # Function to generate a random color
-    def generate_random_color():
-        return '#' + ''.join(random.choices('0123456789ABCDEF', k=6))
-
-    # Function to generate a color map
-    def generate_color_map(unique_items):
-        return {item: generate_random_color() for item in unique_items}
-
-    # Extract unique Regimens and Bundled Regimens
-    unique_regimens = pd.concat([data['REGIMEN'], filtered_data['BUNDLED_REGIMEN']]).unique()
-
-    # Generate the color map
-    regimen_color_map = generate_color_map(unique_regimens)
-    print(regimen_color_map)
-
-    
     nodes = list(filtered_data[source_column].unique().tolist()) + list(filtered_data[target_column].unique().tolist())
-
+ 
     # Step 3: Links Creation
     filtered_data['count'] = 1
     links = filtered_data.groupby([source_column, target_column]).size().reset_index(name='count')
 
     # Step 4: Visual Customizations
-    colors_node = ['rgba({}, {}, {}, 1)'.format(random.randint(0, 255), 
-                                                random.randint(0, 255), 
-                                                random.randint(0, 255)) for _ in nodes]
+    colors_node = [regimen_color_map[node] for node in nodes]
 
     link_colors = [colors_node[nodes.index(source)] for source in links[source_column]]
 
-    def adjust_opacity(color, opacity=0.85):
-        # Split the color string and replace the opacity value
-        parts = color.split(",")
-        parts[3] = " " + str(opacity) + ")"
-        return ",".join(parts)
+    def adjust_opacity(hex_color, opacity=0.85):
+        # Convert the hex color to RGB
+        rgb_color = [int(hex_color[i:i+2], 16) for i in (1, 3, 5)]
+        # Add the opacity and return the color as an RGBA string
+        return f"rgba({rgb_color[0]}, {rgb_color[1]}, {rgb_color[2]}, {opacity})"
 
-    link_colors = [adjust_opacity(colors_node[nodes.index(source)]) for source in links[source_column]]
 
+    link_colors = [adjust_opacity(regimen_color_map[source]) for source in links[source_column]]
    
     source = [nodes.index(link) for link in links[source_column]]
     target = [nodes.index(link) for link in links[target_column]]
@@ -220,7 +227,7 @@ def update_output(n_clicks,toggle_value,year, line, transplant, len_exposed, len
                     hovertemplate="LT: %{source.label} → %{target.label}<br>Patient Count: %{value} out of %{source.value:.1,f}<extra></extra>",
                     color=link_colors,
                 ),
-                textfont=dict(size=20),
+                textfont=dict(size=30),
             )
         ],
         layout={"height": 1000},
