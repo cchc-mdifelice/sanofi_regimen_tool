@@ -1446,3 +1446,22 @@ where line_zero_flag = 0
 and isfirsttreatment = 1
 and year(startdate) = 2022
 group by linenumber;
+
+select count(distinct patientid)
+from big_lot_table_8
+where line_zero_flag = 0
+and linenumber = 1
+and isfirsttreatment = 1
+and transplant_flag = 1
+and regimen like 'DVRd'
+and startdate >= '2022-07-31';
+
+
+
+select count(distinct patientid),drugname
+from PROD_CCHC.SANOFI.MM_FLRN_DRUGEPISODE_0901
+where episodedate >= '2018-01-01'
+and patientid not in (select patientid from big_lot_table_8 where line_zero_flag = 1)
+-- and patientid in (select patientid from big_lot_table_8 where transplant_flag = 1)
+group by drugname
+order by count(distinct patientid) desc;
